@@ -1,0 +1,22 @@
+pipeline{
+    agent any
+    stages{
+        stage("code"){
+            steps{
+                git "https://github.com/pavanmodukuru369/one.git"
+            }
+        }
+        stage("build"){
+            steps{
+                sh "mvn clean package"
+            }
+        }
+        stage("deploy"){
+            steps{
+                   sshagent(['prod']) {
+                   'scp -o StrictHostKeyChecking=no target/*.war ec2-user@107.21.86.115:/home/ec2-user/apache-tomcat-9.0.82/webapps'
+                }
+            }
+        }
+    }
+}
