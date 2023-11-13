@@ -7,4 +7,19 @@ node{
         def mavenCMD = "$mavenHome/bin/mvn"
         sh "$mavenCMD clean package"
     }
+    stage("test"){
+        withSonarQubeEnv('MyProjectSonar'){
+            def mavenHome = tool name: "maven", type: "maven"
+            def mavenCMD = "$mavenHome/bin/mvn"
+            sh "$mavenCMD sonar:sonar"
+        }
+    }
+    stage("artifact"){
+        nexusArtifactUploader artifacts: [[artifactId: 'myweb', classifier: '', file: 'target/myweb-8.5.3.war', type: 'war']], credentialsId: 'nexus', groupId: 'in.javahome', nexusUrl: '54.172.66.164:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'myrepo', version: '8.5.3'
+    }
+    stage("deploy"){
+        sshagent(['516e38c2-6e9f-4fd5-ac13-a95e2e37edd9']) {
+        sh 'scp -o StrictHostKeyChecking=no target/myweb-8.5.3.war ec2-user@34.203.211.58:/home/ec2-user/apache-tomcat-9.0.82/webapps/'
+    }
+    }
 }
